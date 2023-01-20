@@ -249,13 +249,16 @@ generatePCARepel <- function(pcadata,
                              shape = NULL,
                              title = NULL
 ) {
+  percentPCA = round(100*attr(pcadata, "percentVar"))
+  
   if(is.null(shape)){
     print(
       ggplot(pcadata, aes(x=PC1, y=PC2, label = name)) + 
         geom_point(aes(color = !!sym(color)), size = 6, alpha = .8) + 
-        #geom_text(aes(label = name), vjust = 2, size = 5) + 
         geom_text_repel(size=5) +
         ggtitle(paste0("PCA ", title)) + 
+        xlab(paste0("PC1: ", percentPCA[1],"%variance")) +
+        ylab(paste0("PC2: ", percentPCA[2],"%variance")) +
         theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14))
     )
   }
@@ -263,9 +266,10 @@ generatePCARepel <- function(pcadata,
     print(
       ggplot(pcadata, aes(x=PC1, y=PC2, label = name)) + 
         geom_point(aes(shape = !!sym(shape), color = !!sym(color)), size = 6, alpha = .8) + 
-        #geom_text(aes(label = name), vjust = 2, size = 2) + 
         geom_text_repel(size=5) +
         ggtitle(paste0("PCA ", title)) + 
+        xlab(paste0("PC1: ", percentPCA[1],"%variance")) +
+        ylab(paste0("PC2: ", percentPCA[2],"%variance")) +
         theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14))
     )
   }
