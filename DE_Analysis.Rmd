@@ -68,7 +68,7 @@ batch = NULL
 samples.in.comp=TRUE
 export.plots=TRUE
 
-perform.go=FALSE
+perform.go=TRUE
 perform.kegg=FALSE
 plot.kegg=FALSE
 #The comparisons witht the following for, can be hardcoded/overwritten here...
@@ -115,7 +115,7 @@ addBatch = F
 
 #Filter settings
 alpha = 0.05  #fdr value
-fc.cutoff = 2 #fold change cutoff, 1.5-2 depending on number of results...
+fc.cutoff = 1.5 #fold change cutoff, 1.5-2 depending on number of results...
 
 #misc settings
 #pre.filtering is used to filter out genes with a low nr of readcounts, mainly used for efficiency but not absolutely necessary as this is done by DESeq2 itself as well. There is no specific value to be used as cutoff. We use a cutoff of at least 5 reads total per row (gene) across all samples
@@ -470,8 +470,7 @@ for (comp in comparision)
   cat("Volcano plots are commonly used to display the results of RNA-seq or other omics experiments. A volcano plot is a type of scatterplot that shows statistical significance (P value) versus magnitude of change (fold change). It enables quick visual identification of genes with large fold changes that are also statistically significant. These may be the most biologically significant genes. In a volcano plot, the most upregulated genes are towards the right, the most downregulated genes are towards the left, and the most statistically significant genes are towards the top.")
   cat(' \n \n')
   
-  plotVolcano(results_contrast=results_contrast, contrast= c(comp[1],comp[2], comp[3]), fcval=fc.cutoff, fc.max=maxfc, fdrval=alpha)
-  
+  volcanoplot=plotVolcano(results_contrast=results_contrast, contrast= c(comp[1],comp[2], comp[3]), fcval=fc.cutoff, fc.max=maxfc, fdrval=alpha)
   cat(' \n \n')
   cat("  *Figure ",figure_counter, " Volcano-plot (scatter plotthat shows statistical significance (P value) versus magnitude of change (log2 fold change)).*")
   figure_counter = figure_counter+1
@@ -481,8 +480,15 @@ for (comp in comparision)
   cat("This displays the global view of the relationship between the expression change of conditions (log ratios, M), the average expression strength of the genes (average mean, A), and the ability of the algorithm to detect differential gene expression. The genes that passed the significance threshold (adjusted p-value < 0.01) are colored with the genes being down-regulated being colored in blue while the genes being up-regulated are colored in red and each dot representing a gene.")
   cat(' \n \n')
   
-  plotMA(results_contrast=results_contrast, contrast= c(comp[1],comp[2], comp[3]), fc.max=maxfc, fdrval=alpha)
   
+  maplot=plotMA(results_contrast=results_contrast, contrast= c(comp[1],comp[2], comp[3]), fc.max=maxfc, fdrval=alpha)
+  
+  if(export.plots==TRUE){
+      save_pdf(volcanoplot, filename=paste0("../../plots/DE_Volcano_",project, "_", comp[2], "-", comp[3],".pdf"))
+      save_svg(volcanoplot, filename=paste0("../../plots/DE_Volcano_",project, "_", comp[2], "-", comp[3],".svg"))
+      save_pdf(maplot, filename=paste0("../../plots/DE_MA_",project, "_", comp[2], "-", comp[3],".pdf"))
+      save_svg(maplot, filename=paste0("../../plots/DE_MA_",project, "_", comp[2], "-", comp[3],".svg"))
+    }
   cat(' \n \n')
   cat("  *Figure ",figure_counter, " MA-Plot (scatter plot of log2 fold changes (on the y-axis) versus the mean of normalized counts (on the x-axis)*")
   cat(' \n \n')
@@ -584,6 +590,12 @@ for (comp in comparision)
     #tab for each GO category
     cat("  \n##### Biological Process\n", sep = "")
     
+    go.data=all.go.results[all.go.results$ontology=="BP", ]
+    enriched.go = go.data[go.data$over_represented_pvalue<0.05,]
+    dt = datatable_custom(data=enriched.go[c(1:min(250, length(enriched.go))), ], row.names = F, signif.cols = c("over_represented_pvalue", "under_represented_pvalue"))
+    cat(knitr::knit_print(dt))
+    cat(' \n \n')
+    
     enriched.file = paste0(contrast[1],"_",contrast[2],"_vs_",contrast[3],"_BP_enriched.txt")
     process.go.results(go.data=all.go.results[all.go.results$ontology=="BP", ], p.value=0.05, enriched.file = enriched.file)
     
@@ -594,12 +606,24 @@ for (comp in comparision)
     
     cat("  \n##### Cellular Component\n", sep = "")
     
+    go.data=all.go.results[all.go.results$ontology=="CC", ]
+    enriched.go = go.data[go.data$over_represented_pvalue<0.05,]
+    dt = datatable_custom(data=enriched.go[c(1:min(250, length(enriched.go))), ], row.names = F, signif.cols = c("over_represented_pvalue", "under_represented_pvalue"))
+    cat(knitr::knit_print(dt))
+    cat(' \n \n')
+    
     enriched.file = paste0(contrast[1],"_",contrast[2],"_vs_",contrast[3],"_CC_enriched.txt")
     process.go.results(go.data=all.go.results[all.go.results$ontology=="CC", ], p.value=0.05, enriched.file = enriched.file)
     
     cat(' \n \n')
     
     cat("  \n##### Molecular Function\n", sep = "")
+    
+    go.data=all.go.results[all.go.results$ontology=="MF", ]
+    enriched.go = go.data[go.data$over_represented_pvalue<0.05,]
+    dt = datatable_custom(data=enriched.go[c(1:min(250, length(enriched.go))), ], row.names = F, signif.cols = c("over_represented_pvalue", "under_represented_pvalue"))
+    cat(knitr::knit_print(dt))
+    cat(' \n \n')
     
     enriched.file = paste0(contrast[1],"_",contrast[2],"_vs_",contrast[3],"_MF_enriched.txt")
     process.go.results(go.data=all.go.results[all.go.results$ontology=="MF", ], p.value=0.05, enriched.file = enriched.file)
