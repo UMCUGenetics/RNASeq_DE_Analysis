@@ -6,7 +6,7 @@
 # install.packages("plotly")
 # install.packages("DT")
 # BiocManager::install("clusterProfiler")
-
+# install.packages("ggpubr")
 library("biomaRt")#, lib=custom_libs)
 library("purrr")#, lib=custom_libs)
 library("dplyr")#, lib=custom_libs)
@@ -15,10 +15,10 @@ library("pheatmap")#, lib=custom_libs)
 library("RColorBrewer")#, lib=custom_libs)
 library("ggplot2")#, lib=custom_libs)
 library("ggrepel")#, lib=custom_libs)
-
+#install.packages("ggpubr")
 library(plotly)
 library(DT)
-
+library(ggpubr)
 #pathway analysis libs (gage, etc)
 library(AnnotationDbi)
 library(BiocManager)
@@ -44,19 +44,19 @@ setCores <- function(nrcores=2){
 }
 
 save_pheatmap_pdf <- function(x, filename, width=10, height=10) {
-       stopifnot(!missing(x))
-       stopifnot(!missing(filename))
-       pdf(filename, width=width, height=height)
-       grid::grid.newpage()
-       grid::grid.draw(x$gtable)
-       dev.off()
+  stopifnot(!missing(x))
+  stopifnot(!missing(filename))
+  pdf(filename, width=width, height=height)
+  #grid::grid.newpage()
+  grid::grid.draw(x$gtable)
+  dev.off()
 }
 
 save_pdf <- function(x, filename, width=10, height=10) {
   stopifnot(!missing(x))
   stopifnot(!missing(filename))
   pdf(filename, width=width, height=height)
-  grid::grid.newpage()
+  #grid::grid.newpage()
   grid::grid.draw(x)
   dev.off()
 }
@@ -244,13 +244,37 @@ correctIds <- function(x){
   gsub("\\-", ".", x)
 }
 
+generatePCARepelTest <- function(pcadata,
+                                 color = "condition",
+                                 shape = NULL,
+                                 title = NULL
+) {
+  percentPCA = round(100*attr(pcadata, "percentVar"))
+  if(missing(shape)){
+    shapes=waiver()
+  } else {
+    shapes="x"
+  }
+  
+  print(paste0("Shapes: ", shapes))
+  print(
+    ggplot(pcadata, aes(x=PC1, y=PC2, label = name)) + 
+      #geom_point(aes(shape = 19, color = !!sym(color)), size = 6, alpha = .8) + 
+      geom_point(aes(shape = ifelse(shapes!="x",shapes,!!sym(shape)), color = !!sym(color)), size = 6, alpha = .8) + 
+      geom_text_repel(size=5) +
+      ggtitle(paste0("PCA ", title)) + 
+      xlab(paste0("PC1: ", percentPCA[1],"%variance")) +
+      ylab(paste0("PC2: ", percentPCA[2],"%variance")) +
+      theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14), axis.text = element_text(size=14))
+  )
+}
+
 generatePCARepel <- function(pcadata,
                              color = "condition",
                              shape = NULL,
                              title = NULL
 ) {
   percentPCA = round(100*attr(pcadata, "percentVar"))
-  
   if(is.null(shape)){
     print(
       ggplot(pcadata, aes(x=PC1, y=PC2, label = name)) + 
@@ -259,7 +283,7 @@ generatePCARepel <- function(pcadata,
         ggtitle(paste0("PCA ", title)) + 
         xlab(paste0("PC1: ", percentPCA[1],"%variance")) +
         ylab(paste0("PC2: ", percentPCA[2],"%variance")) +
-        theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14))
+        theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14), axis.text = element_text(size=14))
     )
   }
   else{
@@ -268,13 +292,12 @@ generatePCARepel <- function(pcadata,
         geom_point(aes(shape = !!sym(shape), color = !!sym(color)), size = 6, alpha = .8) + 
         geom_text_repel(size=5) +
         ggtitle(paste0("PCA ", title)) + 
-        xlab(paste0("PC1: ", percentPCA[1],"%variance")) +
-        ylab(paste0("PC2: ", percentPCA[2],"%variance")) +
-        theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14))
+        xlab(paste0("PC1: ",percentPCA[1], "%variance")) +
+        ylab(paste0("PC2: ", percentPCA[2], "%variance")) +
+        theme(plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_text(size=14), legend.text=element_text(size=14), axis.text = element_text(size=14))
     )
   }
 }
-
 generatePCARepelDeprecated <- function(pcadata,
                                        color = "condition",
                                        shape = NULL,
@@ -364,7 +387,7 @@ getDataForContrast <- function(dds=NULL, contrast=NULL, fcval=1.5, fdrval=0.05, 
   return(results_contrast) 
 }
 
-plotVolcano <- function(results_contrast=NULL, contrast=NULL, fcval=1.5, fdrval=0.05, fc.max=6){
+plotVolcanoOrg <- function(results_contrast=NULL, contrast=NULL, fcval=1.5, fdrval=0.05, fc.max=6){
   # -------- QC figures --------------#
   par(mfrow=c(1,1))
   with(results_contrast, plot(log2FoldChange, -log10(pvalue), pch=20, main=paste0("Volcano-Plot. ",contrast[1],": ",contrast[2],"_versus_",contrast[3]),xlim = c(-1*fc.max,fc.max)))
@@ -375,7 +398,55 @@ plotVolcano <- function(results_contrast=NULL, contrast=NULL, fcval=1.5, fdrval=
   legend("bottomright", xjust=1, yjust=1, legend=c("Up","Down"), pch=20, col=c("red","blue"))
 }
 
+plotVolcano <- function(results_contrast=NULL, contrast=NULL, fcval=1.5, fdrval=0.05, fc.max=6){
+  data = as.data.frame(results_contrast)
+  #from https://samdsblog.netify.app/post/visualizing-volcano-plots-in-r
+  data = data %>% mutate(
+    Expression = case_when(log2FoldChange >= log2(fcval) & padj<=fdrval ~ "Up-regulated",
+                           log2FoldChange <= -log2(fcval) & padj<=fdrval ~ "Down-regulated",
+                           TRUE ~ "Unchanged")
+  )
+  
+  top <- 10
+  top_genes <- bind_rows(
+    data %>% 
+      filter(Expression == 'Up-regulated') %>% 
+      arrange(padj, desc(abs(log2FoldChange))) %>% 
+      head(top),
+    data %>% 
+      filter(Expression == 'Down-regulated') %>% 
+      arrange(padj, desc(abs(log2FoldChange))) %>% 
+      head(top)
+  )
+  
+  print(ggplot(data, aes(log2FoldChange, -log10(padj))) +
+          ggtitle(paste0(contrast[2], " -> ", contrast[3]))+          
+          geom_vline(xintercept=-log2(fcval), linetype="dotted", color="blue", size=1) +
+          geom_vline(xintercept=log2(fcval), linetype="dotted", color="red", size=1) +
+          geom_point(aes(color=Expression), size=1)+
+          xlab(expression("log[2]*FC"))+
+          ylab(expression("-log[10]padj")) +
+          scale_color_manual(values=c("dodgerblue3", "gray50", "firebrick3")) +
+          guides(colour=guide_legend(override.aes=list(size=1.5))) +
+          geom_label_repel(data = top_genes,
+                           mapping = aes(log2FoldChange, -log(padj,10), label = rownames(top_genes)),
+                           size = 3))
+}
+
+
 plotMA <- function(results_contrast=NULL, contrast=NULL,fdrval=0.05, fc.max=2){
+  print(ggmaplot(results_contrast, main=paste0(contrast[2], " -> ", contrast[3]), #main = expression(contrast[1] %->% contrast[2]),
+           fdr = fdrval, fc =fc.max, size = 1,
+           palette = c("#B31B21", "#1465AC", "darkgray"),
+           #genenames = as.vector(diff_express$name),
+           legend = "top", top = 20,
+           font.label = c("bold", 11), label.rectangle = TRUE,
+           font.legend = "bold",
+           font.main = "bold",
+           ggtheme = ggplot2::theme_minimal()))
+  #DESeq2::plotMA(results_contrast, ylim = c(-1*fc.max,fc.max), alpha = fdrval, main=paste0("MA-plot. ",contrast[1],": ",contrast[2],"_versus_",contrast[3]))
+}
+plotMA_deseq2 <- function(results_contrast=NULL, contrast=NULL,fdrval=0.05, fc.max=2){
   DESeq2::plotMA(results_contrast, ylim = c(-1*fc.max,fc.max), alpha = fdrval, main=paste0("MA-plot. ",contrast[1],": ",contrast[2],"_versus_",contrast[3]))
 }
 
