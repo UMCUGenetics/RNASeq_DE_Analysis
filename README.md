@@ -169,8 +169,12 @@ perform.kegg=FALSE
 #a boolean value specifying whether the top 3 pathways from the KEGG-pathway analysis should be plotted
 plot.kegg=FALSE 
 
-#a boolean value specifying whether the various plots as generated in the report should also be exported to both pdf and svg format
-export.plots=TRUE 
+#a boolean value specifying whether the various plots as generated in the report should also be exported to pdf format
+export.plots.pdf=TRUE 
+
+#a boolean value specifying whether the various plots as generated in the report should also be exported to svg format
+#set to FALSE because filesizes for SVG can be quite large
+export.plots.pdf=FALSE 
 
 #a boolean value specifying whether only the samples as defined in the metadatafile should be included for all processing steps (including normalization,e tc)
 samples.in.comp=TRUE 
