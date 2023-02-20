@@ -151,20 +151,27 @@ Some other parameters can also be set in the config.txt file, if not specified t
 ```
 #fdr.cutoff is the false discovery (or p-adjusted) cutoff used for differentially expressed gene detection
 fdr.cutoff=0.05 
+
 #fc.cutoff is the fold-change cutoff  used for differentially expressed gene detection
 fc.cutoff=1.5 
+
 #group.replicates.by can be used to specify by which column technical replicates should be grouped, to be used when an experiment contains 
 #both biological as technical replicates. In that case the technical replicates will first be collpased into a single value, after which the biological
 #replicates are used as actual replicates
 group.replicates.by=NULL
+
 #a boolean value specifying whether GO-term analysis should be performed (in beta/development, use at your own risk!)
 perform.go=FALSE 
+
 #a boolean value specifying whether KEGG-pathway analysis should be performed (in beta/development, use at your own risk!)
 perform.kegg=FALSE 
+
 #a boolean value specifying whether the top 3 pathways from the KEGG-pathway analysis should be plotted
 plot.kegg=FALSE 
+
 #a boolean value specifying whether the various plots as generated in the report should also be exported to both pdf and svg format
 export.plots=TRUE 
+
 #a boolean value specifying whether only the samples as defined in the metadatafile should be included for all processing steps (including normalization,e tc)
 samples.in.comp=TRUE 
 ```
