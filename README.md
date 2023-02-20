@@ -148,14 +148,14 @@ The script will loop through these automatically and generate the report for all
 
 Some other parameters can also be set in the config.txt file, if not specified the script will use it's default settings:
 
-fdr.cutoff
-fc.cutoff
-group.replicates.by
-perform.go
-perform.kegg
-plot.kegg
-export.plots
-samples.in.comp
+fdr.cutoff=0.05 
+fc.cutoff=1.5 
+group.replicates.by=NULL
+perform.go=FALSE 
+perform.kegg=FALSE 
+plot.kegg=FALSE 
+export.plots=TRUE 
+samples.in.comp=TRUE 
 
 ## Running
 
