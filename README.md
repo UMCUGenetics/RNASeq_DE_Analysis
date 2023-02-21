@@ -184,10 +184,17 @@ samples.in.comp=TRUE
 
 In order to finally run/knit the script one can either open the .Rmd file in R-Studio and go through the or open an R-Session and executre the following command;
 
-Pandoc is used for the final knitting, while this is (or should be) already included with RStudio you most likely will need to first install it before trying to knit the .Rmd file to a HTML-document directly in R.
+Pandoc is used for the final knitting, while this is (or should be) already included with RStudio you most likely will need to first install it before trying to knit the .Rmd file to a HTML-document directly in R. Please find the proper way of doing this for your OS.
 
-Please find the proper way of doing this for your OS.
+For example: 
 
+```
+#ubuntu
+sudo apt-get install pandoc
+
+#centos 
+yum install pandoc
+```
 ```
 rmarkdown::render("XXXX_DE_Analysis.Rmd", "html_document")
 ```
